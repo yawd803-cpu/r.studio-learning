@@ -1,0 +1,28 @@
+library(ggplot2)
+library(dplyr) 
+library(readr)
+df <- read_tsv("C:\Users\31082\Desktop\C3-P-vs-O2-P.all.annot.xls", show_col_types = FALSE）
+volcano_data <- df %>% 
+mutate( 
+    log2FC = `log2(fc)`,
+    neg_log10_FDR = -log10(FDR),
+    group = case_when(
+      FDR < 0.05 & log2FC > 1    ~ "up",
+      FDR < 0.05 & log2FC < -1   ~ "down",
+      TRUE                       ~ "nosig" )) %>%
+  filter(!is.na(log2FC) & !is.na(FDR))
+p <- ggplot(volcano_data, aes(x = log2FC, y = neg_log10_FDR, color = group)) +
+  geom_point(size = 1.05, alpha = 0.85, stroke = 0) +geom_vline(xintercept = c(-1, 0, 1), 
+             linetype = "dashed", color = "black", linewidth = 0.55) +geom_hline(yintercept = -log10(0.05), 
+             linetype = "dashed", color = "black", linewidth = 0.5) +scale_color_manual(
+    values = c("up" = "#FF6666", "nosig" = "#999999", "down" = "#3399FF"),
+    breaks = c("up", "nosig", "down"),
+    labels = c("up", "nosig", "down")) +
+  scale_y_continuous(limits = c(0, 355),expand = expansion(mult = c(0.025, 0.04)) ) +labs(title = "C3-P-vs-O2-P volcano plot",x = "log2(fc)",y = "-log10(FDR)") +
+  theme_classic(base_size = 14)+
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    panel.border = element_rect(color = "black", linewidth = 0.65, fill = NA),
+    axis.line = element_line(color = "black", linewidth = 0.4),
+    legend.position = "right",
+    legend.title = element_blank(),
+    plot.margin = margin(22, 20, 25, 15))
